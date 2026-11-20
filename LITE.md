@@ -9,4 +9,8 @@ Changes from upstream (branch 1.20.1, commit 998c9d5):
   remembers when each texture was last used; when the Java heap is over 65% full it deletes textures that have not
   been used for 15 seconds (5 seconds when over 80%). They reload from disk on demand.
 
+- **Morph menu previews** (`FormCellRenderer`): upstream draws a live 3D preview of every visible form in the picker,
+  which loads every visible model and texture at once. When the Java heap is under about 1.2 GB, this fork only
+  previews the hovered or chosen form; the rest show their name.
+
 More changes will be listed here as they are made.

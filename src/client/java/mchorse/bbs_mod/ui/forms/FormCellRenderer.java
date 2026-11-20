@@ -19,6 +19,13 @@ public class FormCellRenderer
     /** Cell width from which a name strip is drawn along the bottom edge. */
     public static final int NAME_THRESHOLD = 80;
 
+    /**
+     * Low-memory fork change: with a small Java heap (under ~1.2 GB) only the hovered or chosen cell gets a live
+     * 3D preview. Upstream draws a preview for every visible cell, which loads every visible model and its
+     * textures at once and runs out of memory on small devices.
+     */
+    private static final boolean LITE_PREVIEWS = Runtime.getRuntime().maxMemory() < 1200L * 1024L * 1024L;
+
     public static boolean hasName(int cellWidth)
     {
         return cellWidth >= NAME_THRESHOLD;
@@ -38,7 +45,20 @@ public class FormCellRenderer
         context.batcher.clip(x, y, w, h, context);
 
         CellPainter.marks(context, x, y, w, h, state);
-        FormUtilsClient.renderPreview(form, context, x, y, x + w, y + h - (hasName(w) ? CellPainter.CAPTION_HEIGHT : 0));
+
+        if (!LITE_PREVIEWS || state.hover || state.selected || state.picked)
+        {
+            FormUtilsClient.renderPreview(form, context, x, y, x + w, y + h - (hasName(w) ? CellPainter.CAPTION_HEIGHT : 0));
+        }
+        else if (!hasName(w))
+        {
+            /* Too narrow for the name strip: the name itself stands in for the picture. */
+            FontRenderer font = context.batcher.getFont();
+            String name = font.limitToWidth(form.getDisplayName(), w - 4);
+
+            context.batcher.textShadow(name, x + (w - font.getWidth(name)) / 2, y + (h - font.getHeight()) / 2, Colors.GRAY);
+        }
+
         CellPainter.dim(context, x, y, w, h, state);
 
         if (hasName(w))
